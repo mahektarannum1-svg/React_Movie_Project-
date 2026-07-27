@@ -1,110 +1,136 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./IntroOverlay.css";
 
-// Scene 1: Spiral particles — text orbits/rotates with the spiral
-// Scene 2: Blackhole — text zooms through space toward you
+// 720p versions for fast loading
+const VIDEO_SPIRAL    = "https://videos.pexels.com/video-files/33830768/14358475_1280_720_30fps.mp4";
+const VIDEO_BLACKHOLE = "https://videos.pexels.com/video-files/34875776/14777476_1280_720_30fps.mp4";
+
+// Timeline (ms) of what appears while each video plays
 const SCENES = [
   {
-    src: "https://videos.pexels.com/video-files/33830768/14358479_7680_4320_30fps.mp4",
-    duration: 5500,
+    src: VIDEO_SPIRAL,
+    duration: 6000,
+    // words appear at these offsets (ms from scene start)
+    words: [
+      { text: "Welcome", delay: 0 },
+      { text: "to",      delay: 400 },
+      { text: "Cine",    delay: 900,  className: "word-cine" },
+      { text: "Verse",   delay: 1300, className: "word-verse" },
+    ],
+    className: "scene-spiral",
   },
   {
-    src: "https://videos.pexels.com/video-files/34875776/14777479_3840_2160_30fps.mp4",
-    duration: 6000,
+    src: VIDEO_BLACKHOLE,
+    duration: 7000,
+    words: [
+      { text: "A platform",     delay: 0 },
+      { text: "to feel",        delay: 600 },
+      { text: "the",            delay: 1100 },
+      { text: "real cinema.",   delay: 1600, className: "word-cinema" },
+    ],
+    className: "scene-blackhole",
   },
 ];
 
 export default function IntroOverlay({ onComplete }) {
-  const [scene, setScene] = useState(0); // 0 = spiral, 1 = blackhole
-  const [exiting, setExiting] = useState(false); // final warp-out
-  const [sceneExiting, setSceneExiting] = useState(false); // cross-fade between scenes
+  const [sceneIdx, setSceneIdx] = useState(0);
+  const [visibleWords, setVisibleWords] = useState([]);
+  const [videoFade, setVideoFade] = useState("in"); // "in" | "out"
+  const [closing, setClosing] = useState(false);
   const videoRef = useRef(null);
+  const timers = useRef([]);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.playbackRate = 1.0;
-    }
-  }, [scene]);
+  const clearTimers = () => timers.current.forEach(clearTimeout);
 
-  useEffect(() => {
-    const duration = SCENES[scene].duration;
+  const startScene = (idx) => {
+    const scene = SCENES[idx];
+    setVisibleWords([]);
+    setVideoFade("in");
 
-    // Start cross-fade to next scene 600ms before end
-    const crossFadeTimer = setTimeout(() => {
-      setSceneExiting(true);
-    }, duration - 600);
+    // Reveal each word at its scheduled offset
+    scene.words.forEach(({ delay }, i) => {
+      const t = setTimeout(() => {
+        setVisibleWords((prev) => [...prev, i]);
+      }, delay);
+      timers.current.push(t);
+    });
 
-    // Switch scene or end intro
-    const nextTimer = setTimeout(() => {
-      if (scene < SCENES.length - 1) {
-        setScene((s) => s + 1);
-        setSceneExiting(false);
+    // Fade out video 500ms before switching
+    const fadeOut = setTimeout(() => setVideoFade("out"), scene.duration - 500);
+    timers.current.push(fadeOut);
+
+    // Advance to next scene or end
+    const advance = setTimeout(() => {
+      if (idx < SCENES.length - 1) {
+        startScene(idx + 1);
+        setSceneIdx(idx + 1);
       } else {
-        setExiting(true);
-        setTimeout(onComplete, 1400);
+        setClosing(true);
+        setTimeout(onComplete, 1200);
       }
-    }, duration);
+    }, scene.duration);
+    timers.current.push(advance);
+  };
 
-    return () => {
-      clearTimeout(crossFadeTimer);
-      clearTimeout(nextTimer);
-    };
-  }, [scene, onComplete]);
+  useEffect(() => {
+    startScene(0);
+    return clearTimers;
+  }, []);
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.playbackRate = 1.0;
+  }, [sceneIdx]);
+
+  const scene = SCENES[sceneIdx];
 
   const handleSkip = () => {
-    setExiting(true);
-    setTimeout(onComplete, 800);
+    clearTimers();
+    setClosing(true);
+    setTimeout(onComplete, 700);
   };
 
   return (
-    <div className={`intro-overlay ${exiting ? "warp-out" : ""}`}>
+    <div className={`intro-overlay ${closing ? "warp-out" : ""}`}>
 
-      {/* ── VIDEO LAYER ── */}
+      {/* ── Full-screen video ── */}
       <video
         ref={videoRef}
-        key={SCENES[scene].src}
-        className={`intro-video ${sceneExiting ? "fade-out" : "fade-in"}`}
+        key={scene.src}
+        className={`intro-video video-${videoFade}`}
         autoPlay
         muted
         playsInline
         loop
       >
-        <source src={SCENES[scene].src} type="video/mp4" />
+        <source src={scene.src} type="video/mp4" />
       </video>
 
-      {/* ── OVERLAYS ── */}
+      {/* ── Overlays ── */}
       <div className="intro-vignette" />
-      <div className="intro-noise" />
 
-      {/* ── SCENE 1: SPIRAL — Text orbits from the center ── */}
-      {scene === 0 && (
-        <div className="scene scene-spiral">
-          <p className="spiral-eyebrow">— You have arrived —</p>
-          <h1 className="spiral-title">
-            <span className="spiral-cine">Cine</span>
-            <span className="spiral-verse">Verse</span>
-          </h1>
-          <p className="spiral-sub">Where every frame tells a story.</p>
-          {/* Orbiting ring that matches spiral */}
-          <div className="spiral-ring" />
-          <div className="spiral-ring ring-2" />
-        </div>
+      {/* ── TEXT on the video ── */}
+      <div className={`intro-text-block ${scene.className}`}>
+        {scene.words.map((w, i) => (
+          <span
+            key={`${sceneIdx}-${i}`}
+            className={`intro-word ${w.className || ""} ${visibleWords.includes(i) ? "word-visible" : "word-hidden"}`}
+          >
+            {w.text}
+          </span>
+        ))}
+      </div>
+
+      {/* ── Decorative rings (spiral scene only) ── */}
+      {sceneIdx === 0 && (
+        <>
+          <div className="intro-ring ring-a" />
+          <div className="intro-ring ring-b" />
+        </>
       )}
 
-      {/* ── SCENE 2: BLACKHOLE — Text zooms through space ── */}
-      {scene === 1 && (
-        <div className="scene scene-blackhole">
-          <div className="bh-line line-1">A platform to</div>
-          <div className="bh-line line-2">feel the real</div>
-          <div className="bh-line line-3">cinema.</div>
-          {/* Converging speed lines behind text like hyperspace */}
-          <div className="bh-speedlines" />
-        </div>
-      )}
-
-      {/* ── SKIP ── */}
+      {/* ── Skip ── */}
       <button type="button" className="intro-skip" onClick={handleSkip}>
-        Skip Intro ➜
+        Skip ➜
       </button>
     </div>
   );
