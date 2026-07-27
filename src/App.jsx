@@ -24,7 +24,7 @@ export default function App() {
   const [searching, setSearching] = useState(false);
   const [watchlistOpen, setWatchlistOpen] = useState(false);
   const [introComplete, setIntroComplete] = useState(() => {
-    return sessionStorage.getItem("intro_played") === "true";
+    return sessionStorage.getItem("intro_v4_played") === "true";
   });
 
   useEffect(() => {
@@ -86,7 +86,7 @@ export default function App() {
     return (
       <IntroOverlay
         onComplete={() => {
-          sessionStorage.setItem("intro_played", "true");
+          sessionStorage.setItem("intro_v4_played", "true");
           setIntroComplete(true);
         }}
       />

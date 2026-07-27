@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./IntroOverlay.css";
 
+// Version bump forces the intro to replay even if old session key exists
+const SESSION_KEY     = "intro_v4_played";
+
 // 720p versions for fast loading
 const VIDEO_SPIRAL    = "https://videos.pexels.com/video-files/33830768/14358475_1280_720_30fps.mp4";
 const VIDEO_BLACKHOLE = "https://videos.pexels.com/video-files/34875776/14777476_1280_720_30fps.mp4";
@@ -37,6 +40,7 @@ export default function IntroOverlay({ onComplete }) {
   const [visibleWords, setVisibleWords] = useState([]);
   const [videoFade, setVideoFade] = useState("in"); // "in" | "out"
   const [closing, setClosing] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const videoRef = useRef(null);
   const timers = useRef([]);
 
@@ -101,6 +105,8 @@ export default function IntroOverlay({ onComplete }) {
         muted
         playsInline
         loop
+        onError={() => setVideoError(true)}
+        onLoadStart={() => setVideoError(false)}
       >
         <source src={scene.src} type="video/mp4" />
       </video>
