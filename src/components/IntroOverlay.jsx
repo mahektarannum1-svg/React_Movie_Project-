@@ -1,35 +1,32 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./IntroOverlay.css";
 
-// Version bump forces the intro to replay even if old session key exists
-const SESSION_KEY     = "intro_v4_played";
+// Version bump to clear cache
+const SESSION_KEY = "intro_v5_played";
 
-// 720p versions for fast loading
 const VIDEO_SPIRAL    = "https://videos.pexels.com/video-files/33830768/14358475_1280_720_30fps.mp4";
 const VIDEO_BLACKHOLE = "https://videos.pexels.com/video-files/34875776/14777476_1280_720_30fps.mp4";
 
-// Timeline (ms) of what appears while each video plays
 const SCENES = [
   {
     src: VIDEO_SPIRAL,
-    duration: 6000,
-    // words appear at these offsets (ms from scene start)
+    duration: 6500, // 6.5 seconds of active playback
     words: [
       { text: "Welcome", delay: 0 },
-      { text: "to",      delay: 400 },
-      { text: "Cine",    delay: 900,  className: "word-cine" },
-      { text: "Verse",   delay: 1300, className: "word-verse" },
+      { text: "to",      delay: 500 },
+      { text: "Cine",    delay: 1000, className: "word-cine" },
+      { text: "Verse",   delay: 1500, className: "word-verse" },
     ],
     className: "scene-spiral",
   },
   {
     src: VIDEO_BLACKHOLE,
-    duration: 7000,
+    duration: 7000, // 7 seconds of active playback
     words: [
       { text: "A platform",     delay: 0 },
-      { text: "to feel",        delay: 600 },
-      { text: "the",            delay: 1100 },
-      { text: "real cinema.",   delay: 1600, className: "word-cinema" },
+      { text: "to feel",        delay: 700 },
+      { text: "the",            delay: 1300 },
+      { text: "real cinema.",   delay: 1900, className: "word-cinema" },
     ],
     className: "scene-blackhole",
   },
@@ -40,18 +37,26 @@ export default function IntroOverlay({ onComplete }) {
   const [visibleWords, setVisibleWords] = useState([]);
   const [videoFade, setVideoFade] = useState("in"); // "in" | "out"
   const [closing, setClosing] = useState(false);
-  const [videoError, setVideoError] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false); // Only true when video actually plays
   const videoRef = useRef(null);
   const timers = useRef([]);
 
-  const clearTimers = () => timers.current.forEach(clearTimeout);
+  const clearTimers = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  };
 
-  const startScene = (idx) => {
-    const scene = SCENES[idx];
+  // Run this when the video starts actually playing (triggers onPlaying)
+  const handleVideoPlaying = () => {
+    if (hasStarted) return;
+    setHasStarted(true);
+
+    const scene = SCENES[sceneIdx];
+    clearTimers();
     setVisibleWords([]);
     setVideoFade("in");
 
-    // Reveal each word at its scheduled offset
+    // Reveal words sequentially
     scene.words.forEach(({ delay }, i) => {
       const t = setTimeout(() => {
         setVisibleWords((prev) => [...prev, i]);
@@ -59,30 +64,34 @@ export default function IntroOverlay({ onComplete }) {
       timers.current.push(t);
     });
 
-    // Fade out video 500ms before switching
-    const fadeOut = setTimeout(() => setVideoFade("out"), scene.duration - 500);
+    // Start video fade out 600ms before transition
+    const fadeOut = setTimeout(() => {
+      setVideoFade("out");
+    }, scene.duration - 600);
     timers.current.push(fadeOut);
 
-    // Advance to next scene or end
-    const advance = setTimeout(() => {
-      if (idx < SCENES.length - 1) {
-        startScene(idx + 1);
-        setSceneIdx(idx + 1);
+    // Transition to next scene or close
+    const next = setTimeout(() => {
+      if (sceneIdx < SCENES.length - 1) {
+        setHasStarted(false);
+        setSceneIdx((prev) => prev + 1);
       } else {
         setClosing(true);
         setTimeout(onComplete, 1200);
       }
     }, scene.duration);
-    timers.current.push(advance);
+    timers.current.push(next);
   };
 
   useEffect(() => {
-    startScene(0);
     return clearTimers;
   }, []);
 
+  // Whenever scene index changes, reset startup state to wait for next video play
   useEffect(() => {
-    if (videoRef.current) videoRef.current.playbackRate = 1.0;
+    setHasStarted(false);
+    setVisibleWords([]);
+    setVideoFade("in");
   }, [sceneIdx]);
 
   const scene = SCENES[sceneIdx];
@@ -95,8 +104,7 @@ export default function IntroOverlay({ onComplete }) {
 
   return (
     <div className={`intro-overlay ${closing ? "warp-out" : ""}`}>
-
-      {/* ── Full-screen video ── */}
+      {/* Background Video */}
       <video
         ref={videoRef}
         key={scene.src}
@@ -104,18 +112,17 @@ export default function IntroOverlay({ onComplete }) {
         autoPlay
         muted
         playsInline
-        loop
-        onError={() => setVideoError(true)}
-        onLoadStart={() => setVideoError(false)}
+        onPlaying={handleVideoPlaying}
+        onPlay={handleVideoPlaying}
       >
         <source src={scene.src} type="video/mp4" />
       </video>
 
-      {/* ── Overlays ── */}
+      {/* Vignette Overlay */}
       <div className="intro-vignette" />
 
-      {/* ── TEXT on the video ── */}
-      <div className={`intro-text-block ${scene.className}`}>
+      {/* Intro Text Over Video */}
+      <div className={`intro-text-block ${scene.className} ${hasStarted ? "active-motion" : ""}`}>
         {scene.words.map((w, i) => (
           <span
             key={`${sceneIdx}-${i}`}
@@ -126,7 +133,7 @@ export default function IntroOverlay({ onComplete }) {
         ))}
       </div>
 
-      {/* ── Decorative rings (spiral scene only) ── */}
+      {/* Orbiting rings */}
       {sceneIdx === 0 && (
         <>
           <div className="intro-ring ring-a" />
@@ -134,7 +141,7 @@ export default function IntroOverlay({ onComplete }) {
         </>
       )}
 
-      {/* ── Skip ── */}
+      {/* Skip Button */}
       <button type="button" className="intro-skip" onClick={handleSkip}>
         Skip ➜
       </button>
