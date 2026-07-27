@@ -5,6 +5,7 @@ import TrendingSection from './components/Trending';
 import ExplorerSection from './components/Explore';
 import MovieModal from './components/MovieModal';
 import WatchlistPanel from './components/WatchlistPanel';
+import IntroOverlay from './components/IntroOverlay';
 import Footer from './components/Footer';
 import useTheme from './hooks/useTheme';
 import useWatchlist from './hooks/useWatchlist';
@@ -22,6 +23,9 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [watchlistOpen, setWatchlistOpen] = useState(false);
+  const [introComplete, setIntroComplete] = useState(() => {
+    return sessionStorage.getItem("intro_played") === "true";
+  });
 
   useEffect(() => {
     fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_API_KEY}`)
@@ -77,6 +81,17 @@ export default function App() {
     setSearchTerm("");
     setSearching(false);
   };
+
+  if (!introComplete) {
+    return (
+      <IntroOverlay
+        onComplete={() => {
+          sessionStorage.setItem("intro_played", "true");
+          setIntroComplete(true);
+        }}
+      />
+    );
+  }
 
   return (
     <div className={`app ${theme}`}>
