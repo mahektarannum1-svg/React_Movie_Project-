@@ -1,90 +1,109 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./IntroOverlay.css";
 
-const INTRO_VIDEOS = [
+// Scene 1: Spiral particles — text orbits/rotates with the spiral
+// Scene 2: Blackhole — text zooms through space toward you
+const SCENES = [
   {
     src: "https://videos.pexels.com/video-files/33830768/14358479_7680_4320_30fps.mp4",
-    text: "Welcome to CineVerse",
-    duration: 4000
+    duration: 5500,
   },
   {
     src: "https://videos.pexels.com/video-files/34875776/14777479_3840_2160_30fps.mp4",
-    text: "A platform to feel the real cinema.",
-    duration: 5000
-  }
+    duration: 6000,
+  },
 ];
 
 export default function IntroOverlay({ onComplete }) {
-  const [videoIndex, setVideoIndex] = useState(0);
-  const [fade, setFade] = useState(false); // Controls inner element visibility
-  const [closing, setClosing] = useState(false); // Controls final slide/fade out
+  const [scene, setScene] = useState(0); // 0 = spiral, 1 = blackhole
+  const [exiting, setExiting] = useState(false); // final warp-out
+  const [sceneExiting, setSceneExiting] = useState(false); // cross-fade between scenes
   const videoRef = useRef(null);
 
-  useEffect(() => {
-    // Start fade-in of elements
-    const fadeTimer = setTimeout(() => setFade(true), 300);
-    
-    // Set timer for current video scene duration
-    const sceneTimer = setTimeout(() => {
-      setFade(false); // Start fade-out of current text
-      setTimeout(() => {
-        if (videoIndex < INTRO_VIDEOS.length - 1) {
-          setVideoIndex((prev) => prev + 1);
-        } else {
-          // Final transition
-          setClosing(true);
-          setTimeout(onComplete, 1200); // Trigger complete after zoom animation
-        }
-      }, 500);
-    }, INTRO_VIDEOS[videoIndex].duration);
-
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(sceneTimer);
-    };
-  }, [videoIndex, onComplete]);
-
-  // Adjust playback speed to make it feel extra dramatic and fluent
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.playbackRate = 1.0;
     }
-  }, [videoIndex]);
+  }, [scene]);
 
-  const current = INTRO_VIDEOS[videoIndex];
+  useEffect(() => {
+    const duration = SCENES[scene].duration;
+
+    // Start cross-fade to next scene 600ms before end
+    const crossFadeTimer = setTimeout(() => {
+      setSceneExiting(true);
+    }, duration - 600);
+
+    // Switch scene or end intro
+    const nextTimer = setTimeout(() => {
+      if (scene < SCENES.length - 1) {
+        setScene((s) => s + 1);
+        setSceneExiting(false);
+      } else {
+        setExiting(true);
+        setTimeout(onComplete, 1400);
+      }
+    }, duration);
+
+    return () => {
+      clearTimeout(crossFadeTimer);
+      clearTimeout(nextTimer);
+    };
+  }, [scene, onComplete]);
+
+  const handleSkip = () => {
+    setExiting(true);
+    setTimeout(onComplete, 800);
+  };
 
   return (
-    <div className={`intro-overlay ${closing ? "closing" : ""}`}>
-      {/* Background Video */}
+    <div className={`intro-overlay ${exiting ? "warp-out" : ""}`}>
+
+      {/* ── VIDEO LAYER ── */}
       <video
         ref={videoRef}
-        key={current.src}
-        className="intro-video"
+        key={SCENES[scene].src}
+        className={`intro-video ${sceneExiting ? "fade-out" : "fade-in"}`}
         autoPlay
         muted
         playsInline
+        loop
       >
-        <source src={current.src} type="video/mp4" />
+        <source src={SCENES[scene].src} type="video/mp4" />
       </video>
 
-      {/* Cinematic Overlays */}
+      {/* ── OVERLAYS ── */}
       <div className="intro-vignette" />
-      <div className="intro-glow" />
+      <div className="intro-noise" />
 
-      {/* Text Container */}
-      <div className={`intro-content ${fade ? "visible" : "hidden"}`}>
-        <h1 className="intro-text">{current.text}</h1>
-      </div>
+      {/* ── SCENE 1: SPIRAL — Text orbits from the center ── */}
+      {scene === 0 && (
+        <div className="scene scene-spiral">
+          <p className="spiral-eyebrow">— You have arrived —</p>
+          <h1 className="spiral-title">
+            <span className="spiral-cine">Cine</span>
+            <span className="spiral-verse">Verse</span>
+          </h1>
+          <p className="spiral-sub">Where every frame tells a story.</p>
+          {/* Orbiting ring that matches spiral */}
+          <div className="spiral-ring" />
+          <div className="spiral-ring ring-2" />
+        </div>
+      )}
 
-      {/* Skip Button */}
-      <button 
-        type="button" 
-        className="intro-skip" 
-        onClick={() => {
-          setClosing(true);
-          setTimeout(onComplete, 800);
-        }}
-      >
+      {/* ── SCENE 2: BLACKHOLE — Text zooms through space ── */}
+      {scene === 1 && (
+        <div className="scene scene-blackhole">
+          <div className="bh-line line-1">A platform to</div>
+          <div className="bh-line line-2">feel the real</div>
+          <div className="bh-line line-3">cinema.</div>
+          {/* Converging speed lines behind text like hyperspace */}
+          <div className="bh-speedlines" />
+        </div>
+      )}
+
+      {/* ── SKIP ── */}
+      <button type="button" className="intro-skip" onClick={handleSkip}>
         Skip Intro ➜
       </button>
     </div>

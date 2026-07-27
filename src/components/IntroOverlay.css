@@ -1,32 +1,31 @@
 /* =========================================
-   INTRO OVERLAY — CineVerse Theater Mode
+   INTRO OVERLAY — CineVerse Cinematic Intro
    ========================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:ital,wght@0,100;0,200;0,300;0,400;0,700;0,900;1,300&display=swap');
 
+/* ── Base ── */
 .intro-overlay {
   position: fixed;
   inset: 0;
   z-index: 99999;
   background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
   font-family: 'Outfit', sans-serif;
   user-select: none;
-  transition: all 1.2s cubic-bezier(0.85, 0, 0.15, 1);
+  will-change: transform, opacity, filter;
+  transition: opacity 1.4s ease, transform 1.4s cubic-bezier(0.85,0,0.15,1), filter 1.4s ease;
 }
 
-/* Exit transition: zoom/warp effect */
-.intro-overlay.closing {
+/* Final warp-out exit */
+.intro-overlay.warp-out {
   opacity: 0;
-  transform: scale(1.15);
-  filter: blur(20px) brightness(1.5);
+  transform: scale(1.18);
+  filter: blur(24px) brightness(2);
   pointer-events: none;
 }
 
-/* ---------- Video Backdrop ---------- */
+/* ── Video ── */
 .intro-video {
   position: absolute;
   inset: 0;
@@ -34,112 +33,346 @@
   height: 100%;
   object-fit: cover;
   z-index: 0;
-  filter: brightness(0.65) contrast(1.1);
-  transform: scale(1.02);
-  animation: slow-zoom 9s linear infinite alternate;
+  filter: brightness(0.55) contrast(1.15) saturate(1.1);
+  transition: opacity 0.6s ease;
 }
 
-@keyframes slow-zoom {
-  0%   { transform: scale(1.02) rotate(0deg); }
-  100% { transform: scale(1.08) rotate(0.5deg); }
-}
+.intro-video.fade-in  { opacity: 1; }
+.intro-video.fade-out { opacity: 0; }
 
-/* ---------- Cinematic Vignette ---------- */
+/* ── Global Overlays ── */
 .intro-vignette {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.85) 100%);
+  background: radial-gradient(ellipse 70% 70% at 50% 50%,
+    transparent 20%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.97) 100%);
   pointer-events: none;
 }
 
-/* Center light glow */
-.intro-glow {
+.intro-noise {
   position: absolute;
   inset: 0;
-  z-index: 1;
-  background: radial-gradient(circle at center, rgba(229, 9, 20, 0.08) 0%, transparent 60%);
+  z-index: 2;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px;
   pointer-events: none;
+  opacity: 0.35;
 }
 
-/* ---------- Text Content ---------- */
-.intro-content {
-  position: relative;
+/* ── Scene base ── */
+.scene {
+  position: absolute;
+  inset: 0;
   z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 0 24px;
-  max-width: 900px;
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.intro-content.hidden {
-  opacity: 0;
-  transform: scale(0.94) translateY(12px);
-  filter: blur(8px);
+/* ================================================================
+   SCENE 1 — SPIRAL PARTICLES
+   Text emerges from the center, rotates along with the spiral.
+   Letters/words drift outward as if born from the particle vortex.
+   ================================================================ */
+
+.scene-spiral {
+  perspective: 900px;
 }
 
-.intro-content.visible {
-  opacity: 1;
-  transform: scale(1) translateY(0);
-  filter: blur(0);
+/* Eyebrow — drifts in from far left with fade */
+.spiral-eyebrow {
+  font-size: clamp(0.75rem, 2vw, 1rem);
+  font-weight: 300;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 20px;
+  animation: spiral-eyebrow-in 1.2s cubic-bezier(0.16,1,0.3,1) both;
+  animation-delay: 0s;
 }
 
-.intro-text {
-  font-size: clamp(2.4rem, 6vw, 4.8rem);
+@keyframes spiral-eyebrow-in {
+  from { opacity: 0; letter-spacing: 0.8em; transform: translateX(-60px) rotateY(30deg); }
+  to   { opacity: 1; letter-spacing: 0.4em; transform: translateX(0) rotateY(0deg); }
+}
+
+/* Title — two halves spin in from opposite sides of the vortex */
+.spiral-title {
+  font-size: clamp(4rem, 12vw, 9rem);
   font-weight: 900;
   letter-spacing: -0.04em;
+  line-height: 0.9;
+  margin: 0 0 24px;
+  display: flex;
+  align-items: baseline;
+  gap: 0.04em;
+}
+
+.spiral-cine {
   color: #fff;
-  line-height: 1.15;
-  text-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 255, 255, 0.15);
-  background: linear-gradient(180deg, #ffffff 30%, #e0e0e0 100%);
+  display: inline-block;
+  animation:
+    spiral-left-in 1.4s cubic-bezier(0.16,1,0.3,1) both,
+    spiral-float 6s ease-in-out 1.4s infinite alternate;
+  animation-delay: 0.1s, 1.5s;
+  text-shadow: 0 0 60px rgba(255,255,255,0.15);
+}
+
+@keyframes spiral-left-in {
+  from {
+    opacity: 0;
+    transform: translateX(-120px) rotate(-15deg) scale(0.6);
+    filter: blur(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) rotate(0deg) scale(1);
+    filter: blur(0);
+  }
+}
+
+.spiral-verse {
+  display: inline-block;
+  background: linear-gradient(135deg, #e50914 0%, #ff6b35 50%, #fbbf24 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  
-  /* Continuous breathing text effect */
-  animation: text-pulse 4s ease-in-out infinite alternate;
+  background-size: 200%;
+  animation:
+    spiral-right-in 1.4s cubic-bezier(0.16,1,0.3,1) both,
+    spiral-gradient 4s ease-in-out 1.4s infinite alternate,
+    spiral-float 6s ease-in-out 1.4s infinite alternate;
+  animation-delay: 0.2s, 1.6s, 1.5s;
+  filter: drop-shadow(0 0 30px rgba(229,9,20,0.5));
 }
 
-@keyframes text-pulse {
-  0%   { text-shadow: 0 10px 40px rgba(0, 0, 0, 0.8); transform: scale(1); }
-  100% { text-shadow: 0 15px 50px rgba(229, 9, 20, 0.35); transform: scale(1.02); }
+@keyframes spiral-right-in {
+  from {
+    opacity: 0;
+    transform: translateX(120px) rotate(15deg) scale(0.6);
+    filter: blur(12px) brightness(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) rotate(0deg) scale(1);
+    filter: blur(0) brightness(1);
+  }
 }
 
-/* ---------- Skip button ---------- */
+@keyframes spiral-gradient {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* Both halves of the title drift together like orbiting particles */
+@keyframes spiral-float {
+  0%   { transform: translateY(0px) rotate(-0.5deg); }
+  100% { transform: translateY(-8px) rotate(0.5deg); }
+}
+
+/* Sub-heading — drifts up from below after title */
+.spiral-sub {
+  font-size: clamp(0.85rem, 2.5vw, 1.15rem);
+  font-weight: 200;
+  font-style: italic;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  animation: spiral-sub-in 1.2s cubic-bezier(0.16,1,0.3,1) both;
+  animation-delay: 0.6s;
+}
+
+@keyframes spiral-sub-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+    letter-spacing: 0.04em;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    letter-spacing: 0.18em;
+    filter: blur(0);
+  }
+}
+
+/* Orbiting rings that spin like the spiral video */
+.spiral-ring {
+  position: absolute;
+  width: 70vmin;
+  height: 70vmin;
+  border-radius: 50%;
+  border: 1px solid rgba(229, 9, 20, 0.12);
+  pointer-events: none;
+  animation: ring-spin 12s linear infinite;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.spiral-ring.ring-2 {
+  width: 90vmin;
+  height: 90vmin;
+  border-color: rgba(255,255,255,0.05);
+  animation-duration: 20s;
+  animation-direction: reverse;
+}
+
+@keyframes ring-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg) scaleX(1.4); }
+  to   { transform: translate(-50%, -50%) rotate(360deg) scaleX(1.4); }
+}
+
+/* ================================================================
+   SCENE 2 — BLACKHOLE / SPACESHIP
+   Each line of text zooms in from deep space toward the camera.
+   Staggered delays create a cascade flying-through-space effect.
+   ================================================================ */
+
+.scene-blackhole {
+  perspective: 1200px;
+  gap: 0;
+}
+
+.bh-line {
+  display: block;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: #fff;
+  line-height: 1.05;
+  text-shadow: 0 0 40px rgba(229, 9, 20, 0.25), 0 4px 40px rgba(0,0,0,0.9);
+  will-change: transform, opacity, filter;
+}
+
+/* Line 1 — "A platform to" — zooms in first, from smallest */
+.bh-line.line-1 {
+  font-size: clamp(1.6rem, 5.5vw, 4rem);
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+  color: rgba(255,255,255,0.65);
+  animation: fly-through 1.2s cubic-bezier(0.16,1,0.3,1) both;
+  animation-delay: 0s;
+}
+
+/* Line 2 — "feel the real" — slightly bigger, delayed */
+.bh-line.line-2 {
+  font-size: clamp(2.8rem, 9vw, 7rem);
+  animation: fly-through 1.4s cubic-bezier(0.16,1,0.3,1) both;
+  animation-delay: 0.25s;
+}
+
+/* Line 3 — "cinema." — biggest, arrives last, glows red */
+.bh-line.line-3 {
+  font-size: clamp(4rem, 13vw, 10rem);
+  background: linear-gradient(135deg, #fff 30%, #ff8c8c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 40px rgba(229,9,20,0.6));
+  animation: fly-through-big 1.6s cubic-bezier(0.16,1,0.3,1) both;
+  animation-delay: 0.5s;
+}
+
+@keyframes fly-through {
+  from {
+    opacity: 0;
+    transform: translateZ(-1200px) scale(0.05);
+    filter: blur(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateZ(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes fly-through-big {
+  from {
+    opacity: 0;
+    transform: translateZ(-2000px) scale(0.02);
+    filter: blur(40px) brightness(3);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0) brightness(1.3);
+  }
+  to {
+    opacity: 1;
+    transform: translateZ(0) scale(1);
+    filter: blur(0) brightness(1);
+  }
+}
+
+/* Speed lines emanating from center behind text */
+.bh-speedlines {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: repeating-conic-gradient(
+    from 0deg at 50% 50%,
+    rgba(229,9,20,0.03) 0deg,
+    transparent 2deg,
+    transparent 18deg
+  );
+  animation: speedlines-spin 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes speedlines-spin {
+  from { transform: rotate(0deg) scale(2); }
+  to   { transform: rotate(360deg) scale(2); }
+}
+
+/* ── Skip button ── */
 .intro-skip {
   position: absolute;
-  bottom: 40px;
-  right: 40px;
+  bottom: 36px;
+  right: 36px;
   z-index: 20;
-  border: 1.5px solid rgba(255,255,255,0.25);
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: rgba(255,255,255,0.65);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: rgba(255,255,255,0.5);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 10px 22px;
   border-radius: 99px;
   cursor: pointer;
-  transition: all 0.25s ease;
   outline: none;
+  transition: all 0.25s ease;
+  animation: skip-in 1s ease both;
+  animation-delay: 1.5s;
+}
+
+@keyframes skip-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .intro-skip:hover {
-  background: #fff;
-  color: #000;
-  border-color: #fff;
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.5);
+  color: #fff;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(255,255,255,0.25);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 }
 
 @media (max-width: 640px) {
   .intro-skip {
-    bottom: 24px;
-    right: 24px;
-    padding: 8px 18px;
-    font-size: 0.72rem;
+    bottom: 20px;
+    right: 20px;
+    font-size: 0.7rem;
+    padding: 8px 16px;
   }
 }
