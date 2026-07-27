@@ -1,15 +1,14 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./IntroOverlay.css";
 
-const SESSION_KEY = "intro_v6_played";
+const SESSION_KEY = "intro_v7_played";
 
 const VIDEO_SPIRAL    = "https://videos.pexels.com/video-files/33830768/14358475_1280_720_30fps.mp4";
 const VIDEO_BLACKHOLE = "https://videos.pexels.com/video-files/34875776/14777476_1280_720_30fps.mp4";
 
 const SCENES = [
   {
-    src: VIDEO_SPIRAL,
-    duration: 3500, // 3.5 seconds total
+    duration: 2800, // 2.8 seconds total
     words: [
       { text: "Welcome", delay: 0 },
       { text: "to",      delay: 150 },
@@ -19,8 +18,7 @@ const SCENES = [
     className: "scene-spiral",
   },
   {
-    src: VIDEO_BLACKHOLE,
-    duration: 4500, // 4.5 seconds total
+    duration: 3800, // 3.8 seconds total
     words: [
       { text: "A platform",     delay: 0 },
       { text: "to feel",        delay: 400 },
@@ -34,11 +32,12 @@ const SCENES = [
 export default function IntroOverlay({ onComplete }) {
   const [sceneIdx, setSceneIdx] = useState(0);
   const [visibleWords, setVisibleWords] = useState([]);
-  const [videoFade, setVideoFade] = useState("in");
   const [closing, setClosing] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
-  const [disappearIntoLoop, setDisappearIntoLoop] = useState(false); // suck text into vortex
-  const videoRef = useRef(null);
+  const [disappearIntoLoop, setDisappearIntoLoop] = useState(false);
+  
+  const videoRef1 = useRef(null);
+  const videoRef2 = useRef(null);
   const timers = useRef([]);
 
   const clearTimers = () => {
@@ -46,14 +45,14 @@ export default function IntroOverlay({ onComplete }) {
     timers.current = [];
   };
 
-  const handleVideoPlaying = () => {
-    if (hasStarted) return;
+  const handleVideoPlaying = (idx) => {
+    // Only trigger when the active video starts playing
+    if (idx !== sceneIdx || hasStarted) return;
     setHasStarted(true);
 
-    const scene = SCENES[sceneIdx];
+    const scene = SCENES[idx];
     clearTimers();
     setVisibleWords([]);
-    setVideoFade("in");
     setDisappearIntoLoop(false);
 
     // Reveal words sequentially
@@ -64,27 +63,21 @@ export default function IntroOverlay({ onComplete }) {
       timers.current.push(t);
     });
 
-    if (sceneIdx === 0) {
-      // In first video, make text disappear into the loop at 1.8s (after showing for 1.3s)
+    if (idx === 0) {
+      // In first video, make text disappear into the center loop at 1.3 seconds
       const vanish = setTimeout(() => {
         setDisappearIntoLoop(true);
-      }, 1800);
+      }, 1300);
       timers.current.push(vanish);
     }
 
-    // Video fade out 500ms before transition
-    const fadeOut = setTimeout(() => {
-      setVideoFade("out");
-    }, scene.duration - 500);
-    timers.current.push(fadeOut);
-
     // Transition or complete
     const next = setTimeout(() => {
-      if (sceneIdx < SCENES.length - 1) {
-        setSceneIdx((prev) => prev + 1);
+      if (idx < SCENES.length - 1) {
+        setSceneIdx(idx + 1);
       } else {
         setClosing(true);
-        setTimeout(onComplete, 1000);
+        setTimeout(onComplete, 800);
       }
     }, scene.duration);
     timers.current.push(next);
@@ -94,11 +87,16 @@ export default function IntroOverlay({ onComplete }) {
     return clearTimers;
   }, []);
 
+  // Whenever sceneIdx changes, prepare triggers
   useEffect(() => {
     setHasStarted(false);
     setVisibleWords([]);
-    setVideoFade("in");
     setDisappearIntoLoop(false);
+
+    // Play next video programmatically to guarantee instant load
+    if (sceneIdx === 1 && videoRef2.current) {
+      videoRef2.current.play().catch(() => {});
+    }
   }, [sceneIdx]);
 
   const scene = SCENES[sceneIdx];
@@ -106,26 +104,40 @@ export default function IntroOverlay({ onComplete }) {
   const handleSkip = () => {
     clearTimers();
     setClosing(true);
-    setTimeout(onComplete, 600);
+    setTimeout(onComplete, 500);
   };
 
   return (
     <div className={`intro-overlay ${closing ? "warp-out" : ""}`}>
+      
+      {/* ── VIDEO 1 (Spiral) ── */}
       <video
-        ref={videoRef}
-        key={scene.src}
-        className={`intro-video video-${videoFade}`}
+        ref={videoRef1}
+        className={`intro-video ${sceneIdx === 0 ? "active" : "inactive"}`}
         autoPlay
         muted
         playsInline
-        onPlaying={handleVideoPlaying}
-        onPlay={handleVideoPlaying}
+        onPlaying={() => handleVideoPlaying(0)}
+        onPlay={() => handleVideoPlaying(0)}
       >
-        <source src={scene.src} type="video/mp4" />
+        <source src={VIDEO_SPIRAL} type="video/mp4" />
+      </video>
+
+      {/* ── VIDEO 2 (Blackhole) ── */}
+      <video
+        ref={videoRef2}
+        className={`intro-video ${sceneIdx === 1 ? "active" : "inactive"}`}
+        muted
+        playsInline
+        onPlaying={() => handleVideoPlaying(1)}
+        onPlay={() => handleVideoPlaying(1)}
+      >
+        <source src={VIDEO_BLACKHOLE} type="video/mp4" />
       </video>
 
       <div className="intro-vignette" />
 
+      {/* ── TEXT OVERLAY ── */}
       <div className={`intro-text-block ${scene.className} ${disappearIntoLoop ? "disappear-loop" : ""}`}>
         {scene.words.map((w, i) => (
           <span
