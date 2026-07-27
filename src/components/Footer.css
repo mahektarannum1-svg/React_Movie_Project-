@@ -1,0 +1,112 @@
+.footer {
+  margin-top: auto;
+  width: 100%;
+  padding: 32px 16px 32px 16px;
+  padding-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-top: 1px solid #e5e7eb;
+}
+
+.footer.dark {
+  background: rgba(0, 0, 0, 0.8);
+  border-top-color: #374151;
+}
+
+.footer.light {
+  background: rgba(249, 250, 251, 0.8);
+}
+
+.footer-content {
+  width: 100%;
+  max-width: 768px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .footer-content {
+    flex-direction: row;
+  }
+}
+
+.footer-logo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-weight: bold;
+  font-size: 32px;
+  letter-spacing: -0.03em;
+}
+
+.footer-logo-text {
+  padding-right: 6px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.footer-social {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+@media (min-width: 640px) {
+  .footer-social {
+    margin-top: 0;
+  }
+}
+
+.footer-icon {
+  height: 24px;
+  width: 24px;
+}
+
+.footer-link {
+  color: #9ca3af;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.footer.dark .footer-link {
+  color: #d1d5db;
+}
+
+.footer-link:hover {
+  transform: scale(1.1);
+}
+
+.footer-link.twitter:hover {
+  color: #38bdf8;
+}
+
+.footer-link.github:hover {
+  color: #374151;
+}
+
+.footer.dark .footer-link.github:hover {
+  color: white;
+}
+
+.footer-link.linkedin:hover {
+  color: #0284c7;
+}
+
+.footer-copyright {
+  margin-top: 24px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.footer-copyright.dark {
+  color: #9ca3af;
+}
+
+.footer-copyright.light {
+  color: #6b7280;
+}

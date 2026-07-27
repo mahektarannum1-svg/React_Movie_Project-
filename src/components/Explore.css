@@ -1,0 +1,339 @@
+/* =========================================
+   EXPLORER SECTION — CineVerse Premium
+   ========================================= */
+
+.explorer-section {
+  width: 100%;
+  max-width: 1340px;
+  margin: 0 auto;
+  padding: 48px 36px;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.explorer-section.reveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- Header ---------- */
+.explorer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.explorer-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: capitalize;
+  margin: 0;
+}
+
+.results-for {
+  font-size: 1.15rem;
+  font-weight: 500;
+  opacity: 0.6;
+  margin-left: 8px;
+}
+
+/* ---------- Sort dropdown ---------- */
+.sort-wrapper {
+  position: relative;
+}
+
+.sort-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 10px 36px 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(10px);
+}
+
+.sort-select:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.sort-select.light {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #111;
+}
+
+.sort-select.light:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.sort-wrapper::after {
+  content: '▼';
+  font-size: 8px;
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* ---------- Genre Chips ---------- */
+.genre-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 4px 16px;
+  margin-bottom: 28px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.genre-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.genre-chip {
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.55);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.genre-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.genre-chip.active {
+  background: #e50914;
+  border-color: #e50914;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(229, 9, 20, 0.4);
+  transform: translateY(-2px);
+}
+
+.genre-chip.light {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.genre-chip.light:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #111;
+}
+
+.genre-chip.light.active {
+  background: #e50914;
+  border-color: #e50914;
+  color: #fff;
+}
+
+/* ---------- Grid ---------- */
+.explorer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 32px 24px;
+}
+
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  opacity: 0.6;
+  padding: 60px 0;
+}
+
+/* ---------- Movie Card ---------- */
+.movie-card {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  aspect-ratio: 2/3;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.6s ease;
+  opacity: 0;
+  transform: scale(0.92) translateY(15px);
+}
+
+.movie-card.card-visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.movie-card:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(229, 9, 20, 0.25);
+  border-color: rgba(229, 9, 20, 0.35);
+}
+
+.movie-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.movie-card:hover .movie-poster {
+  transform: scale(1.05);
+  filter: blur(4px) brightness(0.4);
+}
+
+/* ---------- Watchlist button on card ---------- */
+.card-wl-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 15;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-wl-btn:hover {
+  transform: scale(1.2);
+  background: #e50914;
+}
+
+.card-wl-btn.in-list {
+  background: #e50914;
+}
+
+/* ---------- Hover Reveal Overlay ---------- */
+.movie-hover-reveal {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.7) 60%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #fff;
+  pointer-events: none;
+}
+
+.movie-card:hover .movie-hover-reveal {
+  opacity: 1;
+}
+
+.movie-hover-reveal .movie-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+  line-height: 1.25;
+}
+
+.movie-overview {
+  font-size: 0.76rem;
+  line-height: 1.5;
+  opacity: 0.75;
+  margin-top: 10px;
+  margin-bottom: 8px;
+}
+
+.movie-hover-reveal .movie-date {
+  font-size: 0.74rem;
+  font-weight: 700;
+  opacity: 0.45;
+  text-transform: uppercase;
+}
+
+/* ---------- Always-visible bottom bar ---------- */
+.movie-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  padding: 18px 16px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.4) 70%, transparent 100%);
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.movie-card:hover .movie-info {
+  opacity: 0;
+}
+
+.movie-title-bar {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* ---------- Sentinel ---------- */
+.scroll-sentinel {
+  height: 60px;
+  width: 100%;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .explorer-section {
+    padding: 32px 16px;
+  }
+  .explorer-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px 14px;
+  }
+  .movie-card {
+    border-radius: 12px;
+  }
+  .movie-hover-reveal {
+    padding: 14px;
+  }
+  .movie-hover-reveal .movie-title {
+    font-size: 0.95rem;
+  }
+  .movie-overview {
+    display: none;
+  }
+}
